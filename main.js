@@ -20,6 +20,7 @@ class Block {
         this.data = data;
         this.previousHash = previousHash;
         this.hash = this.calculateHash() // This contains hash of block, need a way to calculate it
+        this.nonce = 0; // Random value that has nothing to do with other values and can be changed to end up with hash with sufficient number of zeroes.
     }
 
     /**
@@ -30,7 +31,21 @@ class Block {
      * Hash Function to be used: SHA-256
      */
     calculateHash(){
-        return SHA256(this.index + this.previousHash + this.timestamp + JSON.stringify(this.data)).toString();
+        return SHA256(this.index + this.previousHash + this.timestamp + JSON.stringify(this.data) + this.nonce).toString();
+    }
+
+    /**
+     * Inside this method, the aim is to make block hash
+     * begin with a certain amount of zeroes.
+     * @param {*} difficulty 
+     */
+    mineBlock(difficulty){
+        while(this.hash.substring(0, difficulty) !== Array(difficulty + 1).join('0')){
+            this.nonce++;
+            this.hash = this.calculateHash();
+        }
+
+        console.log('Block mined: ' + this.hash);
     }
 }
 
@@ -43,6 +58,7 @@ class Blockchain {
      */
     constructor(){
         this.chain = [this.createGenesisBlock()]; // Array to hold chain of blocks
+        this.difficulty = 4
     }
 
     /**
@@ -65,7 +81,7 @@ class Blockchain {
      */
     addBlock(newBlock){
         newBlock.previousHash = this.getLatestBlock().hash;
-        newBlock.hash = newBlock.calculateHash(); // Every time we add a new block we need to calculate the hash
+        newBlock.mineBlock(this.difficulty);
         this.chain.push(newBlock); // In reality, you can't add a new block so easily as there are numerous checks in place
     }
 
@@ -98,15 +114,50 @@ class Blockchain {
 
 // Testing Blockchain
 let willieCoin = new Blockchain();
+
+console.log('Mining block 1...');
 willieCoin.addBlock(new Block(1, "03/09/2009", {amount : 4}))
+
+console.log('Mining block 2...');
 willieCoin.addBlock(new Block(2, "12/09/2021", {amount : 10}))
+
+console.log('Mining block 3...');
 willieCoin.addBlock(new Block(3, "13/09/2021", {amount : 450}))
 
-console.log('Is blockchain valid? ' + willieCoin.isChainValid())
 
-willieCoin.chain[1].data = {amount : 100}; // Trying to change data
-willieCoin.chain[1].hash = willieCoin.chain[1].calculateHash(); // Trying to recalculate hash to tamper with blockchain
+/**
+ * END OF PART 1: CREATING A BLOCKCHAIN
+ * 
+ * Right now we can create new blocks very quickly, all we
+ * hasve to do is create a transaction, compute its hash and 
+ * add it to an array. Modern computers can do this very quickly
+ * but we don't want people to create 100, 000s of blocks
+ * and spam our blockchain. 
+ * 
+ * There is also a security issue. You can change the contents
+ * of a block and simply recalculate the hashes for all blocks
+ * after that and end up with a valid chain, even though 
+ * you tampered with it. To solve these issues, blockchain has
+ * this thing called proof of work (mining); proves you put
+ * a lot of computing power into creating a block.
+ * 
+ * Blockchain requires the hash of a block to begin with
+ * a certain amount of zeroes and because you can't 
+ * influence the output of a hash function, you have
+ * to hope you get lucky and end up with a hash with
+ * suffiecient number of zeroes in front of it. This is
+ * computationally intensive and is called difficulty.
+ * Difficulty is set so there is a steady amount of
+ * blocks being created. In bitcoin's case, that is one
+ * block every 10 minutes. As computers increase in 
+ * performance, they will take less time to create a new
+ * block. To compensate for that, the difficulty will
+ * simply be increased.
+ **/
 
-console.log('Is blockchain valid? ' + willieCoin.isChainValid())
-
-// console.log(JSON.stringify(willieCoin, null, 4));
+/**
+ * END OF PART 2: PROOF OF WORK
+ * 
+ * Using this new difficulty method we can control how quickly
+ * new blocks are added to the chain.
+ */
