@@ -1,26 +1,40 @@
+
+const SHA256 = require('crypto-js/sha256');
+
+
+class Transaction {
+    /**
+     * Constructor to initialise transaction
+     * @param {*} fromAddress Address of sender
+     * @param {*} toAddress   Address of receiver
+     * @param {*} amount      Amount being issued
+     */
+    constructor(fromAddress, toAddress, amount){
+        this.fromAddress = fromAddress;
+        this.toAddress = toAddress;
+        this.amount = amount;
+    }
+}
+
 /**
  * Class representing single block in blockchain
  * 
- * William Ikenna-Nwosu (wiknwo)
  */
-const SHA256 = require('crypto-js/sha256');
-
 class Block {
     /**
      * Constructor for single block in Blockchain
      * 
-     * @param {*} index         Tells us where block sits on chain
      * @param {*} timestamp     Tells us when block was created
-     * @param {*} data          Any type of data you want to associate with this block i.e. details of transaction for currency; how much was transferred, sender and receiver
+     * @param {*} transactions  Any type of data you want to associate with this block i.e. details of transaction for currency; how much was transferred, sender and receiver
      * @param {String} previousHash Contains has of block before this one. Very important and ensures integrity of blockchain
+     * @param {*} nonce         Random value that has nothing to do with other values and can be changed to end up with hash with sufficient number of zeroes.
      */
-    constructor(index, timestamp, data, previousHash = ''){
-        this.index = index;
+    constructor(timestamp, transactions, previousHash = ''){
         this.timestamp = timestamp;
-        this.data = data;
+        this.transactions = transactions;
         this.previousHash = previousHash;
         this.hash = this.calculateHash() // This contains hash of block, need a way to calculate it
-        this.nonce = 0; // Random value that has nothing to do with other values and can be changed to end up with hash with sufficient number of zeroes.
+        this.nonce = 0; 
     }
 
     /**
@@ -31,7 +45,7 @@ class Block {
      * Hash Function to be used: SHA-256
      */
     calculateHash(){
-        return SHA256(this.index + this.previousHash + this.timestamp + JSON.stringify(this.data) + this.nonce).toString();
+        return SHA256(this.previousHash + this.timestamp + JSON.stringify(this.transactions) + this.nonce).toString();
     }
 
     /**
@@ -58,14 +72,16 @@ class Blockchain {
      */
     constructor(){
         this.chain = [this.createGenesisBlock()]; // Array to hold chain of blocks
-        this.difficulty = 4
+        this.difficulty = 5;
+        this.pendingTransactions = [];
+        this.miningReward = 100; // If you successfully mine a new block
     }
 
     /**
      * Method creates first block in chain which must be added manually
      */
     createGenesisBlock(){
-        return new Block(0, '01/01/2021', "Genesis block", '0000');
+        return new Block('01/01/2021', "Genesis block", '0000');
     }
 
     /**
@@ -76,13 +92,54 @@ class Blockchain {
     }
 
     /**
-     * Method to add new block to chain
-     * @param {Block} newBlock 
+     * Method to mine pending transactions.
+     * Send a wallet address so reward can be issued upon
+     * successful mining of block.
+     * @param {*} miningRewardAddress 
      */
-    addBlock(newBlock){
-        newBlock.previousHash = this.getLatestBlock().hash;
-        newBlock.mineBlock(this.difficulty);
-        this.chain.push(newBlock); // In reality, you can't add a new block so easily as there are numerous checks in place
+    minePendingTransactions(miningRewardAddress){
+        let block = new Block(Date.now(), this.pendingTransactions); // In real life, cannot add all pending transactions to a block as there are too many and block size cannot increase past 1MB. Miners have to pick transactions they want to include.
+        block.mineBlock(this.difficulty);
+
+        console.log("Block successfully mined!");
+        this.chain.push(block)
+
+        this.pendingTransactions = [new Transaction(null, miningRewardAddress, this.miningReward)];
+    }
+
+    /**
+     * Method receives transaction and adds it to pending 
+     * transactions array.
+     * @param {*} transaction new transaction to be added to pendingTransactions array
+     */
+    createTransaction(transaction){
+        this.pendingTransactions.push(transaction);
+    }
+
+    /**
+     * Method to check balance at an address
+     * Balance is actually stored on blockchain. If you want
+     * to know it you must go through all transactions
+     * that involve your address and calculate it that way.
+     */
+    getBalanceOfAddress(address){
+        let balance = 0
+
+        for(const block of this.chain){
+            for(const transaction of block.transactions){
+                // If you are from address, means you transferred money away from your wallet to someone else so we have to reduce your balance
+                if(transaction.fromAddress === address){
+                    balance -= transaction.amount;
+                }
+
+                //If you are toAddress then you are receiver and we have to increase your balance
+                if(transaction.toAddress === address){
+                    balance += transaction.amount
+                }
+            }
+        }
+
+        return balance;
     }
 
     /**
@@ -114,15 +171,21 @@ class Blockchain {
 
 // Testing Blockchain
 let willieCoin = new Blockchain();
+willieCoin.createTransaction(new Transaction('address1', 'address2', 100))
+willieCoin.createTransaction(new Transaction('address2', 'address1', 50))
+// In reality, address1 and address2 would be the public key of someone's wallet.
+// After creation of these transactions they will be pending transactions so we need a miner
 
-console.log('Mining block 1...');
-willieCoin.addBlock(new Block(1, "03/09/2009", {amount : 4}))
+console.log('\n Starting the miner...');
+willieCoin.minePendingTransactions('willie\'s-balance');
 
-console.log('Mining block 2...');
-willieCoin.addBlock(new Block(2, "12/09/2021", {amount : 10}))
+console.log('\nBalance of willie is', willieCoin.getBalanceOfAddress('willie\'s-balance'));
 
-console.log('Mining block 3...');
-willieCoin.addBlock(new Block(3, "13/09/2021", {amount : 450}))
+console.log('\n Starting the miner again...');
+willieCoin.minePendingTransactions('willie\'s-balance');
+
+console.log('\nBalance of willie is', willieCoin.getBalanceOfAddress('willie\'s-balance'));
+
 
 
 /**
@@ -160,4 +223,8 @@ willieCoin.addBlock(new Block(3, "13/09/2021", {amount : 450}))
  * 
  * Using this new difficulty method we can control how quickly
  * new blocks are added to the chain.
+ * 
+ * Next, turn blockchain into little cryptocurrency, we will make
+ * it so that a (i) block can contain multiple transactions and
+ * (ii) add rewards for miners.
  */
