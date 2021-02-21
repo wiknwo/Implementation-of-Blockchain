@@ -60,7 +60,7 @@ class Blockchain {
     }
 
     /**
-     * 
+     * Method to add new block to chain
      * @param {Block} newBlock 
      */
     addBlock(newBlock){
@@ -68,12 +68,45 @@ class Blockchain {
         newBlock.hash = newBlock.calculateHash(); // Every time we add a new block we need to calculate the hash
         this.chain.push(newBlock); // In reality, you can't add a new block so easily as there are numerous checks in place
     }
+
+    /**
+     * Method to check if chain is valid. Onece a block is added
+     * to the chain, it cannot be changed without validating
+     * rest of the chain. This method verifies integrity of
+     * block chain.
+     */
+    isChainValid() {
+        // Don't start with block 0 because that is the genesis block
+        for(let i = 1;i < this.chain.length;i++){
+            const currentBlock = this.chain[i];
+            const previousBlock = this.chain[i - 1];
+
+            // 1. Check if hash of the block is still valid
+            if(currentBlock.hash != currentBlock.calculateHash()){
+                return false;
+            }
+
+            // 2. Check if block checks to correct previous block
+            if(currentBlock.previousHash !== previousBlock.hash){
+                return false;
+            }
+        }
+
+        return true;
+    }
 }
 
 // Testing Blockchain
 let willieCoin = new Blockchain();
-willieCoin.addBlock(new Block(1, "10/09/2021", {amount : 4}))
+willieCoin.addBlock(new Block(1, "03/09/2009", {amount : 4}))
 willieCoin.addBlock(new Block(2, "12/09/2021", {amount : 10}))
 willieCoin.addBlock(new Block(3, "13/09/2021", {amount : 450}))
 
-console.log(JSON.stringify(willieCoin, null, 4));
+console.log('Is blockchain valid? ' + willieCoin.isChainValid())
+
+willieCoin.chain[1].data = {amount : 100}; // Trying to change data
+willieCoin.chain[1].hash = willieCoin.chain[1].calculateHash(); // Trying to recalculate hash to tamper with blockchain
+
+console.log('Is blockchain valid? ' + willieCoin.isChainValid())
+
+// console.log(JSON.stringify(willieCoin, null, 4));
