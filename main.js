@@ -1,7 +1,6 @@
 
 const SHA256 = require('crypto-js/sha256');
 
-
 class Transaction {
     /**
      * Constructor to initialise transaction
@@ -121,6 +120,8 @@ class Blockchain {
      * Balance is actually stored on blockchain. If you want
      * to know it you must go through all transactions
      * that involve your address and calculate it that way.
+     * 
+     * @param {*} address Address to check balance at
      */
     getBalanceOfAddress(address){
         let balance = 0
@@ -227,4 +228,13 @@ console.log('\nBalance of willie is', willieCoin.getBalanceOfAddress('willie\'s-
  * Next, turn blockchain into little cryptocurrency, we will make
  * it so that a (i) block can contain multiple transactions and
  * (ii) add rewards for miners.
+ */
+
+/**
+ * END OF PART 3: CRYPTOCURRENCY
+ * 
+ * There is a small problem with current version. Anyone can make
+ * any transaction that they want. To rectofy this, we must 
+ * make it mandatory for people to sign off on transactions 
+ * with a public and private key.
  */
