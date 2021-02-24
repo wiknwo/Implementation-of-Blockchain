@@ -7,23 +7,23 @@ const myKey = ec.keyFromPrivate('98ca8b11d7a6c0fa526bf556220f41e4f77a6f63ae96cc3
 const myWalletAddress = myKey.getPublic('hex');
 
 // Testing Blockchain
-let willieCoin = new Blockchain();
+let wiknwoCoin = new Blockchain();
 
 // Creating and adding a transaction
 const tx1 = new Transaction(myWalletAddress, 'public key goes here', 10);
 tx1.signTransaction(myKey);
-willieCoin.addTransaction(tx1);
+wiknwoCoin.addTransaction(tx1);
 
 // In reality, address1 and address2 would be the public key of someone's wallet.
 // After creation of these transactions they will be pending transactions so we need a miner
 console.log('\n Starting the miner...');
-willieCoin.minePendingTransactions(myWalletAddress);
+wiknwoCoin.minePendingTransactions(myWalletAddress);
 
-console.log('\nBalance of willie is', willieCoin.getBalanceOfAddress(myWalletAddress));
+console.log('\nBalance of willie is', wiknwoCoin.getBalanceOfAddress(myWalletAddress));
 
-willieCoin.chain[1].transactions[0].amount = 1; // Chain not valid anymore because signature has changed.
+wiknwoCoin.chain[1].transactions[0].amount = 1; // Chain not valid anymore because signature has changed.
 
-console.log('Is chain valid?', willieCoin.isChainValid());
+console.log('Is chain valid?', wiknwoCoin.isChainValid());
 
 
 /**
