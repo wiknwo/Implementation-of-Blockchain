@@ -1,0 +1,20 @@
+<div class="container">
+    <h1>Settings</h1>
+    <br>
+
+    <div class="form-group">
+        <label>Difficulty</label>
+        <!--NgModel tells angular that we want the value of input field to be
+        bound to the variable name blockchain.difficulty. Means if we change difficulty
+        in our input field, angular will automatically write it to our
+        blockchain instance and the difficulty field in our blockchain -->
+        <input type="number" class="form-control" [(ngModel)]="blockchain.difficulty">
+    </div>
+
+    <br>
+
+    <div class="form-group">
+        <label>Mining reward</label>
+        <input type="number" class="form-control" [(ngModel)]="blockchain.miningReward">
+    </div>
+</div>

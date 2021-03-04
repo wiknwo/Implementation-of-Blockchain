@@ -9,10 +9,11 @@ class Transaction {
      * @param {*} toAddress   Address of receiver
      * @param {*} amount      Amount being issued
      */
-    constructor(fromAddress, toAddress, amount){
+    constructor(fromAddress, toAddress, amount, timestamp){
         this.fromAddress = fromAddress;
         this.toAddress = toAddress;
         this.amount = amount;
+		this.timestamp = timestamp;
     }
 
     /**
@@ -21,7 +22,7 @@ class Transaction {
      * Just sign hash of transaction.
      */
     calculateHash() {
-        return SHA256(this.fromAddress + this.toAddress + this.amount).toString();
+        return SHA256(this.fromAddress + this.toAddress + this.amount + this.timestamp).toString();
     }
 
     /**
@@ -143,7 +144,7 @@ class Blockchain {
      * Method creates first block in chain which must be added manually
      */
     createGenesisBlock(){
-        return new Block('01/01/2021', "Genesis block", '0000');
+        return new Block(Date.now(), [], '0');
     }
 
     /**
@@ -160,7 +161,7 @@ class Blockchain {
      * @param {*} miningRewardAddress 
      */
     minePendingTransactions(miningRewardAddress){
-        const rewardTx = new Transaction(null, miningRewardAddress, this.miningReward);
+        const rewardTx = new Transaction(null, miningRewardAddress, this.miningReward, Date.now());
         this.pendingTransactions.push(rewardTx);
 
         let block = new Block(Date.now(), this.pendingTransactions, this.getLatestBlock().hash); // In real life, cannot add all pending transactions to a block as there are too many and block size cannot increase past 1MB. Miners have to pick transactions they want to include.
